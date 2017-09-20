@@ -6,7 +6,7 @@
 /*   By: kmurray <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/08/16 19:59:36 by kmurray           #+#    #+#             */
-/*   Updated: 2017/09/19 23:17:56 by kmurray          ###   ########.fr       */
+/*   Updated: 2017/09/20 01:09:42 by kmurray          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,4 +36,5 @@ typedef struct		s_base64
 	char			*output_path;
 }					t_base64;
 
+void				sd_base64(int ac, char **av);
 #endif
