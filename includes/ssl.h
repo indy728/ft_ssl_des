@@ -6,7 +6,7 @@
 /*   By: kmurray <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/08/16 19:59:36 by kmurray           #+#    #+#             */
-/*   Updated: 2017/09/20 01:09:42 by kmurray          ###   ########.fr       */
+/*   Updated: 2017/09/20 23:10:16 by kmurray          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@
 # include "libft.h"
 
 # define USAGE "usage: ft_ssl <command> [-e | -d] [-i <path>] [-o <path]"
+# define RD_ERR "fatal error: error reading file at path:"
+# define WR_ERR "fatal error: error writing to file at path:"
 
 # define KMDB(x) ft_printf("%s\n", x)
 

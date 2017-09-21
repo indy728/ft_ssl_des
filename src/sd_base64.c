@@ -6,11 +6,20 @@
 /*   By: kmurray <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/09/19 23:47:30 by kmurray           #+#    #+#             */
-/*   Updated: 2017/09/20 20:26:53 by kmurray          ###   ########.fr       */
+/*   Updated: 2017/09/20 23:13:49 by kmurray          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ssl.h"
+
+void	b64_memdel(t_base64 *b64)
+{
+	ft_strdel(&b64->decoded);
+	ft_strdel(&b64->encoded);
+	ft_strdel(&b64->input_path);
+	ft_strdel(&b64->output_path);
+	free(b64);
+}
 
 static void		b64_xput(char **xput, t_bool *n, char **av, int *i)
 {
@@ -151,13 +160,15 @@ void	sd_base64_decode(t_base64 *b64)
 	*h = '\0';
 }
 
-void	xcode_from_file(char **string, char *path)
+void	xcode_from_file(t_base64 *b64, char **string, char *path)
 {
 	VAR(int, fd, 0);
 	if ((fd = open(path, O_RDONLY)) < 0)
 	{
-		ft_printf("FUCK YOU\n");///////////////////
-		exit (0) ;//////////////////
+		b64_memdel(b64);
+		ft_putstr_fd(RD_ERR, 2);
+		ft_putendl_fd(path, 2);
+		exit (1);
 	}
 	VAR(char*, line, NULL);
 	while (get_next_line(fd, &line) > 0)
@@ -172,13 +183,16 @@ void	xcode_from_file(char **string, char *path)
 	close(fd);
 }
 
-static int	get_output_fd(char *path)
+static int	get_output_fd(t_base64 *b64, char *path)
 {
 	VAR(int, fd, 1);
-	if ((fd = open(path, O_CREAT | O_APPEND)))
+	VAR(mode_t, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	if ((fd = open(path, O_CREAT | O_WRONLY | O_APPEND, mode)) < 0)
 	{
-		ft_printf("FUCK YOU\n");///////////////////
-		exit (0) ;//////////////////
+		b64_memdel(b64);
+		ft_putstr_fd(WR_ERR, 2);
+		ft_putendl_fd(path, 2);
+		exit (1);
 	}
 	return (fd);
 }
@@ -187,7 +201,8 @@ void	sd_base64_output(t_base64 *b64)
 {
 	VAR(int, fd, 1);
 	if (b64->o)
-		fd = get_output_fd(b64->output_path);
+		fd = get_output_fd(b64, b64->output_path);
+	ft_printf("fd: %d\n", fd);
 	ft_putendl_fd(b64->e ? b64->encoded : b64->decoded, fd);
 	if (fd > 2)
 		close (fd);
@@ -202,7 +217,7 @@ void	sd_base64(int ac, char **av)
 		if (!b64->i)
 			get_next_line(0, &b64->decoded);
 		else
-			xcode_from_file(&b64->decoded, b64->input_path);
+			xcode_from_file(b64, &b64->decoded, b64->input_path);
 		sd_base64_encode(b64);
 		sd_base64_output(b64);
 	}
@@ -211,8 +226,9 @@ void	sd_base64(int ac, char **av)
 		if (!b64->i)
 			get_next_line(0, &b64->encoded);
 		else
-			xcode_from_file(&b64->encoded, b64->input_path);
+			xcode_from_file(b64, &b64->encoded, b64->input_path);
 		sd_base64_decode(b64);
 		sd_base64_output(b64);
 	}
+	b64_memdel(b64);
 }
