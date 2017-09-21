@@ -6,11 +6,23 @@
 /*   By: kmurray <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/09/19 23:47:30 by kmurray           #+#    #+#             */
-/*   Updated: 2017/09/20 01:34:32 by kmurray          ###   ########.fr       */
+/*   Updated: 2017/09/20 20:26:53 by kmurray          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ssl.h"
+
+static void		b64_xput(char **xput, t_bool *n, char **av, int *i)
+{
+	++*i;
+	if (av[*i] && av[*i][0] != '-')
+	{
+		*xput = ft_strdup(av[*i]);
+		*n = 1;
+	}
+	else
+		--*i;
+}
 
 void	sd_base64_options(t_base64 *b64, int ac, char **av)
 {
@@ -22,9 +34,9 @@ void	sd_base64_options(t_base64 *b64, int ac, char **av)
 		else if (av[i][1] == 'd')
 			b64->d = 1;
 		else if (av[i][1] == 'i')
-			b64->i = 1;
+			b64_xput(&b64->input_path, &b64->i, av, &i);
 		else if (av[i][1] == 'o')
-			b64->o = 1;
+			b64_xput(&b64->output_path, &b64->o, av, &i);
 		++i;
 	}
 	b64->e = !(b64->e + b64->d) ? 1 : b64->e;
@@ -73,7 +85,112 @@ void	sd_base64_encode(t_base64 *b64)
 	}
 	if (i < len)
 		h = b64_encode_helper(b64, h, len, i);
-	*h++ = '\0';
+	*h = '\0';
+}
+
+/*
+ *	0x30 = 	00110000
+ *	0x3C =	00111100
+ *
+ *
+ */
+
+static int	get_len(char *str)
+{
+	VAR(int, i, 0);
+	while (str[i] && str[i] != '=')
+		++i;
+	return (i);
+}
+
+static int	get_new_len(char *str, int len)
+{
+	VAR(int, i, 0);
+	while (str[len + i])
+		++i;
+	i = (i % 3 ? 3 - i : 0);
+	return (len / 4 * 3 + 1 + i);
+}
+
+static char	*b64_decode_helper(t_base64 *b64, char *h, int len, int i)
+{
+	VAR(char*, tmp, (char *)g_base64);
+	*h++ = ((int)ft_strlchr(tmp, b64->encoded[i]) << 2) |
+		(((int)ft_strlchr(tmp, b64->encoded[i + 1]) & 0x30) >> 4);
+	if (i == len - 3)
+	{
+		*h++ = (((int)ft_strlchr(tmp, b64->encoded[i + 1]) & 0xF) << 4) |
+				(((int)ft_strlchr(tmp, b64->encoded[i + 2]) & 0x3C) >> 2);
+	}
+	return (h);
+}
+
+/*
+ *	Have to make sure everything is printable here VV
+ */
+
+void	sd_base64_decode(t_base64 *b64)
+{
+	VAR(int, i, 0);
+	VAR(int, len, get_len(b64->encoded));
+	VAR(char*, tmp, (char *)g_base64);
+	b64->decoded = ft_strnew(get_new_len(b64->encoded, len));
+	VAR(char*, h, b64->decoded);
+	while (i < len - 3)
+	{
+		*h++ = ((int)ft_strlchr(tmp, b64->encoded[i]) << 2) |
+			(((int)ft_strlchr(tmp, b64->encoded[i + 1]) & 0x30) >> 4);
+		*h++ = (((int)ft_strlchr(tmp, b64->encoded[i + 1]) & 0xF) << 4) |
+				(((int)ft_strlchr(tmp, b64->encoded[i + 2]) & 0x3C) >> 2);
+		*h++ = (((int)ft_strlchr(tmp, b64->encoded[i + 2]) & 0x3) << 6) |
+				((int)ft_strlchr(tmp, b64->encoded[i + 3]));
+		i += 4;
+	}
+	if (i < len)
+		h = b64_decode_helper(b64, h, len, i);
+	*h = '\0';
+}
+
+void	xcode_from_file(char **string, char *path)
+{
+	VAR(int, fd, 0);
+	if ((fd = open(path, O_RDONLY)) < 0)
+	{
+		ft_printf("FUCK YOU\n");///////////////////
+		exit (0) ;//////////////////
+	}
+	VAR(char*, line, NULL);
+	while (get_next_line(fd, &line) > 0)
+	{
+		if (*string)
+		   *string = ft_strjoin(ft_strjoin(*string, "\n"), line);////hella memory fuckos
+		else
+		   *string = ft_strdup(line);
+		ft_strdel(&line);
+	}
+	ft_strdel(&line);
+	close(fd);
+}
+
+static int	get_output_fd(char *path)
+{
+	VAR(int, fd, 1);
+	if ((fd = open(path, O_CREAT | O_APPEND)))
+	{
+		ft_printf("FUCK YOU\n");///////////////////
+		exit (0) ;//////////////////
+	}
+	return (fd);
+}
+
+void	sd_base64_output(t_base64 *b64)
+{
+	VAR(int, fd, 1);
+	if (b64->o)
+		fd = get_output_fd(b64->output_path);
+	ft_putendl_fd(b64->e ? b64->encoded : b64->decoded, fd);
+	if (fd > 2)
+		close (fd);
 }
 
 void	sd_base64(int ac, char **av)
@@ -82,8 +199,20 @@ void	sd_base64(int ac, char **av)
 	sd_base64_options(b64, ac, av);
 	if (b64->e)
 	{
-		get_next_line(0, &b64->decoded);
+		if (!b64->i)
+			get_next_line(0, &b64->decoded);
+		else
+			xcode_from_file(&b64->decoded, b64->input_path);
 		sd_base64_encode(b64);
-		ft_putendl(b64->encoded);
+		sd_base64_output(b64);
+	}
+	else
+	{
+		if (!b64->i)
+			get_next_line(0, &b64->encoded);
+		else
+			xcode_from_file(&b64->encoded, b64->input_path);
+		sd_base64_decode(b64);
+		sd_base64_output(b64);
 	}
 }
