@@ -6,7 +6,7 @@
 /*   By: kmurray <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/09/19 23:47:30 by kmurray           #+#    #+#             */
-/*   Updated: 2017/09/20 23:13:49 by kmurray          ###   ########.fr       */
+/*   Updated: 2017/09/27 21:37:35 by kmurray          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,19 +106,24 @@ void	sd_base64_encode(t_base64 *b64)
 
 static int	get_len(char *str)
 {
-	VAR(int, i, 0);
-	while (str[i] && str[i] != '=')
-		++i;
-	return (i);
+	VAR(size_t, i, 0);
+	VAR(size_t, j, 0);
+	while(str[i] && (ft_strlchr((char *)g_base64, str[i]) >= 0 || str[i] == '='))
+		i++;
+	if (i != ft_strlen(str) && str[i] != '\n' && (i % 4))
+		return (-1);
+	while (j < i && str[j] != '=')
+		++j;
+	return ((int)j);
 }
 
 static int	get_new_len(char *str, int len)
 {
 	VAR(int, i, 0);
-	while (str[len + i])
+	while (i < len && str[i] != '=' && str[i] != '\n')
 		++i;
-	i = (i % 3 ? 3 - i : 0);
-	return (len / 4 * 3 + 1 + i);
+	VAR(int, new, i / 4 * 3 + (i % 4)); 
+	return (new);
 }
 
 static char	*b64_decode_helper(t_base64 *b64, char *h, int len, int i)
@@ -142,8 +147,15 @@ void	sd_base64_decode(t_base64 *b64)
 {
 	VAR(int, i, 0);
 	VAR(int, len, get_len(b64->encoded));
+	if (len < 0)
+	{
+		b64_memdel(b64);
+		ft_putendl_fd(INV_INP, 2);
+		exit(1);
+	}
 	VAR(char*, tmp, (char *)g_base64);
-	b64->decoded = ft_strnew(get_new_len(b64->encoded, len));
+	VAR(int, len2, get_new_len(b64->encoded, len));
+	b64->decoded = ft_strnew(len2);
 	VAR(char*, h, b64->decoded);
 	while (i < len - 3)
 	{
@@ -170,16 +182,8 @@ void	xcode_from_file(t_base64 *b64, char **string, char *path)
 		ft_putendl_fd(path, 2);
 		exit (1);
 	}
-	VAR(char*, line, NULL);
-	while (get_next_line(fd, &line) > 0)
-	{
-		if (*string)
-		   *string = ft_strjoin(ft_strjoin(*string, "\n"), line);////hella memory fuckos
-		else
-		   *string = ft_strdup(line);
-		ft_strdel(&line);
-	}
-	ft_strdel(&line);
+	if (get_all_bytes(fd, string) < 0)
+		ft_printf("FUCK!\n");///////////////////////////////
 	close(fd);
 }
 
@@ -202,8 +206,9 @@ void	sd_base64_output(t_base64 *b64)
 	VAR(int, fd, 1);
 	if (b64->o)
 		fd = get_output_fd(b64, b64->output_path);
-	ft_printf("fd: %d\n", fd);
-	ft_putendl_fd(b64->e ? b64->encoded : b64->decoded, fd);
+	ft_putstr_fd(b64->e ? b64->encoded : b64->decoded, fd);
+	if (b64->e && fd == 1)
+		ft_putendl("");
 	if (fd > 2)
 		close (fd);
 }
@@ -215,7 +220,7 @@ void	sd_base64(int ac, char **av)
 	if (b64->e)
 	{
 		if (!b64->i)
-			get_next_line(0, &b64->decoded);
+			get_all_bytes(0, &b64->decoded);
 		else
 			xcode_from_file(b64, &b64->decoded, b64->input_path);
 		sd_base64_encode(b64);
@@ -224,7 +229,7 @@ void	sd_base64(int ac, char **av)
 	else
 	{
 		if (!b64->i)
-			get_next_line(0, &b64->encoded);
+			get_all_bytes(0, &b64->encoded);
 		else
 			xcode_from_file(b64, &b64->encoded, b64->input_path);
 		sd_base64_decode(b64);

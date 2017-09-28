@@ -1,23 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   test.c                                             :+:      :+:    :+:   */
+/*   ft_strjoinew.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: kmurray <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/08/22 19:55:40 by kmurray           #+#    #+#             */
-/*   Updated: 2017/09/26 22:06:09 by kmurray          ###   ########.fr       */
+/*   Created: 2017/09/26 14:13:36 by kmurray           #+#    #+#             */
+/*   Updated: 2017/09/26 14:26:06 by kmurray          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-int	main(void)
+char	*ft_strjoinew(char *str1, char *str2, int del)
 {
-	int fd = open("Makefile", O_RDONLY);
-	char *new = ft_strnew(1);
-	if (!get_all_bytes(fd, &new))
-		ft_printf("%s", new);
-	ft_strdel(&new);
-	close(fd);
+	char	*new;
+
+	new = ft_strnew(ft_strlen(str1) + ft_strlen(str2));
+	new = ft_strcpy(new, str1);
+	new = ft_strcat(new, str2);
+	if (del > 1)
+		ft_strdel(&str2);
+	if (del & 1)
+		ft_strdel(&str1);
+	return (new);
 }

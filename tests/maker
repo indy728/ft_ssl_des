@@ -26,6 +26,7 @@ $(NAME): $(OBJ)
 	@make -C $(LIBFT_PATH)
 	@printf "\033[1m\x1b[36mBuilding lem-in executable...\x1b[0m\n"
 	@$(CC) -o $(NAME) $(OBJ) -L$(LIBFT_PATH) -lft $(CFLAGS)
+	@export PATH=$PATH:.
 	@printf "\033[1m\x1b[32mReady!\x1b[0m\n"
 
 $(OBJ_PATH)%.o: $(SRC_PATH)%.c
@@ -36,6 +37,7 @@ $(OBJ_PATH)%.o: $(SRC_PATH)%.c
 test: $(OBJ)
 	@printf "\033[1m\x1b[33mRefreshing executable...\n"
 	@$(CC) -o $(NAME) $(OBJ) -L$(LIBFT_PATH) -lft $(CFLAGS)
+	@export PATH=$PATH:.
 	@printf "\033[1m\x1b[32mReady!\x1b[0m\n"
 
 clean:

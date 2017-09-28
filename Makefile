@@ -1,6 +1,6 @@
 .PHONY: all, $(NAME), test, clean, fclean, re
 
-NAME= ssl_des
+NAME= ft_ssl
 
 CC= cc
 

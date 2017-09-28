@@ -6,7 +6,7 @@
 /*   By: kmurray <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/11/28 12:26:25 by kmurray           #+#    #+#             */
-/*   Updated: 2017/09/14 14:38:18 by kmurray          ###   ########.fr       */
+/*   Updated: 2017/09/27 00:21:20 by kmurray          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ size_t				ft_strlen(char const *str);
 size_t				ft_endspaces(char *str);
 size_t				ft_wordlen(char *str, char c);
 size_t				ft_count_words(char *str, char c);
-size_t				ft_strlchr(char *str, char c);
+int					ft_strlchr(char *str, char c);
 
 char				*ft_strdup(char const *str);
 char				*ft_strndup(char const *str, size_t size);
@@ -92,6 +92,7 @@ int					ft_strnequ(char const *s1, char const *s2, size_t n);
 char				*ft_strsub(char const *str, unsigned int start,
 							size_t size);
 char				*ft_strjoin(char const *s1, char const *s2);
+char				*ft_strjoinew(char *s1, char *s2, int del);
 char				*ft_strtrim(char const *str);
 char				*ft_strtrim2(char *str, char c);
 char				**ft_strsplit(char const *str, char c);

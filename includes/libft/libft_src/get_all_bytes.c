@@ -1,23 +1,30 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   test.c                                             :+:      :+:    :+:   */
+/*   get_all_bytes.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: kmurray <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/08/22 19:55:40 by kmurray           #+#    #+#             */
-/*   Updated: 2017/09/26 22:06:09 by kmurray          ###   ########.fr       */
+/*   Created: 2017/09/26 21:51:21 by kmurray           #+#    #+#             */
+/*   Updated: 2017/09/26 22:24:20 by kmurray          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-int	main(void)
+int	get_all_bytes(int const fd, char **new)
 {
-	int fd = open("Makefile", O_RDONLY);
-	char *new = ft_strnew(1);
-	if (!get_all_bytes(fd, &new))
-		ft_printf("%s", new);
-	ft_strdel(&new);
-	close(fd);
+	char	buff[BUFF_SIZE + 1];
+	int		b;
+
+	if (fd < 0 || fd > MAX_FD)
+		return (-1);
+	if (!*new)
+		*new = ft_strnew(1);
+	while ((b = read(fd, buff, BUFF_SIZE)) > 0)
+	{
+		buff[b] = '\0';
+		*new = ft_strjoinew(*new, buff, 1);
+	}
+	return (b == 0 ? 1 : 0);
 }
